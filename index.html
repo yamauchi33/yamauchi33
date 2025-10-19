@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Numen in the Fleeting Days</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background-color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    .gallery {
+      column-count: 3;
+      column-gap: 0;
+    }
+    .gallery img {
+      width: 100%;
+      display: block;
+      margin: 0;
+      padding: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .gallery img:hover {
+      opacity: 0.9;
+    }
+    @media (max-width: 900px) {
+      .gallery { column-count: 2; }
+    }
+    @media (max-width: 600px) {
+      .gallery { column-count: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery" id="gallery"></div>
+
+  <script>
+    // 自动加载 photos 文件夹内的图片（jpg/png/jpeg）
+    async function loadImages() {
+      const folder = 'photos/';
+      const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+      const container = document.getElementById('gallery');
+
+      try {
+        // GitHub Pages 不允许直接列目录，这里用 JS 预定义列表逻辑
+        // 你只需要修改 totalImages 这个数字即可。
+        const totalImages = 12; // 👈 修改成你的照片数量
+        for (let i = 1; i <= totalImages; i++) {
+          for (let ext of extensions) {
+            const img = new Image();
+            img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+            img.onerror = () => {}; // 忽略不存在的格式
+            img.onload = () => container.appendChild(img);
+          }
+        }
+      } catch (err) {
+        console.error('加载图片失败：', err);
+      }
+    }
+    loadImages();
+  </script>
+</body>
+</html>
