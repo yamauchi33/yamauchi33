@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>yama33の生活</title>
+  <title>yama33</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -20,6 +20,7 @@
       margin: 0;
       padding: 0;
       transition: opacity 0.3s ease-in-out;
+      cursor: zoom-in;
     }
     .gallery img:hover {
       opacity: 0.9;
@@ -30,35 +31,71 @@
     @media (max-width: 600px) {
       .gallery { column-count: 1; }
     }
+
+    /* 放大预览效果 */
+    .lightbox {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      cursor: zoom-out;
+    }
+    .lightbox.show {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div class="gallery" id="gallery"></div>
 
-  <script>
-    // 自动加载 photos 文件夹内的图片（jpg/png/jpeg）
-    async function loadImages() {
-      const folder = 'photos/';
-      const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-      const container = document.getElementById('gallery');
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="">
+  </div>
 
-      try {
-        // GitHub Pages 不允许直接列目录，这里用 JS 预定义列表逻辑
-        // 你只需要修改 totalImages 这个数字即可。
-        const totalImages = 51; // 👈 修改成你的照片数量
-        for (let i = 1; i <= totalImages; i++) {
-          for (let ext of extensions) {
-            const img = new Image();
-            img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
-            img.onerror = () => {}; // 忽略不存在的格式
-            img.onload = () => container.appendChild(img);
-          }
-        }
-      } catch (err) {
-        console.error('加载图片失败：', err);
+  <script>
+    const folder = 'photos/';
+    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const container = document.getElementById('gallery');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox.querySelector('img');
+
+    // 自动加载图片（命名为 01.jpg, 02.jpg ... 不限数量）
+    for (let i = 1; i <= 200; i++) {
+      for (let ext of extensions) {
+        const img = new Image();
+        img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+        img.onload = () => {
+          container.appendChild(img);
+          img.onclick = () => openLightbox(img.src);
+        };
+        img.onerror = () => {}; // 跳过不存在的文件
       }
     }
-    loadImages();
+
+    // 点击放大预览
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('show');
+    }
+
+    // 点击关闭放大
+    lightbox.onclick = () => {
+      lightbox.classList.remove('show');
+      lightboxImg.src = '';
+    };
   </script>
 </body>
 </html>
