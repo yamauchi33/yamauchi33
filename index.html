@@ -5,7 +5,6 @@
   <title>YAMA33 | Photo Journal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* ====== 全局样式 ====== */
     body {
       margin: 0;
       background-color: #fdfdfd;
@@ -13,18 +12,15 @@
       color: #333;
     }
 
-    /* ====== 头部标题 ====== */
     header {
       text-align: center;
       padding: 60px 20px 20px;
     }
-
     header h1 {
       font-size: 2.2rem;
       letter-spacing: 0.15em;
       margin-bottom: 10px;
     }
-
     header p {
       font-size: 0.95rem;
       color: #777;
@@ -33,13 +29,30 @@
       line-height: 1.6;
     }
 
-    /* ====== 图片展示区 ====== */
+    /* 区块标题 */
+    .section-title {
+      text-align: center;
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+      margin: 60px 0 20px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 60px;
+      height: 2px;
+      background-color: #ccc;
+      margin: 10px auto 0;
+    }
+
+    /* 图片展示 */
     .gallery {
       column-count: 3;
       column-gap: 12px;
-      padding: 30px 10%;
+      padding: 0 10%;
     }
-
     .gallery img {
       width: 100%;
       margin-bottom: 12px;
@@ -48,21 +61,18 @@
       transition: transform 0.25s ease, opacity 0.25s ease;
       cursor: zoom-in;
     }
-
     .gallery img:hover {
       transform: scale(1.02);
       opacity: 0.9;
     }
-
     @media (max-width: 900px) {
-      .gallery { column-count: 2; padding: 20px 5%; }
+      .gallery { column-count: 2; padding: 0 5%; }
     }
-
     @media (max-width: 600px) {
-      .gallery { column-count: 1; padding: 10px 5%; }
+      .gallery { column-count: 1; padding: 0 5%; }
     }
 
-    /* ====== 图片放大预览 ====== */
+    /* 放大预览 */
     .lightbox {
       position: fixed;
       top: 0; left: 0;
@@ -76,20 +86,17 @@
       transition: opacity 0.3s ease;
       z-index: 10;
     }
-
     .lightbox img {
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       cursor: zoom-out;
     }
-
     .lightbox.show {
       visibility: visible;
       opacity: 1;
     }
 
-    /* ====== 页脚 ====== */
     footer {
       text-align: center;
       color: #aaa;
@@ -100,41 +107,56 @@
   </style>
 </head>
 <body>
-  <!-- ====== 顶部标题区 ====== -->
   <header>
     <h1>YAMA33</h1>
-    <p>Moments I want to remember — snapshots of light, cities, and quiet places.  
-    Simple frames that tell stories without words.</p>
+    <p>Fragments of everyday life — moments, travels, and food that make up quiet days.</p>
   </header>
 
-  <!-- ====== 图片画廊 ====== -->
-  <div class="gallery" id="gallery"></div>
+  <!-- ====== 生活 Life ====== -->
+  <div class="section-title">LIFE</div>
+  <div class="gallery" id="life"></div>
 
-  <!-- ====== 图片放大预览 ====== -->
+  <!-- ====== 旅行 Travel ====== -->
+  <div class="section-title">TRAVEL</div>
+  <div class="gallery" id="travel"></div>
+
+  <!-- ====== 美食 Food ====== -->
+  <div class="section-title">FOOD</div>
+  <div class="gallery" id="food"></div>
+
+  <!-- ====== 预览层 ====== -->
   <div class="lightbox" id="lightbox">
     <img src="" alt="">
   </div>
 
-  <!-- ====== 页脚 ====== -->
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
   <script>
-    const folder = 'photos/';
+    const sections = {
+      life: { folder: 'photos/life/', count: 10 },
+      travel: { folder: 'photos/travel/', count: 10 },
+      food: { folder: 'photos/food/', count: 10 }
+    };
+
     const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-    const container = document.getElementById('gallery');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = lightbox.querySelector('img');
 
-    // 自动加载图片（命名为 01.jpg, 02.jpg ...）
-    for (let i = 1; i <= 200; i++) {
-      for (let ext of extensions) {
-        const img = new Image();
-        img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
-        img.onload = () => {
-          container.appendChild(img);
-          img.onclick = () => openLightbox(img.src);
-        };
-        img.onerror = () => {};
+    // 循环加载各区照片
+    for (let key in sections) {
+      const container = document.getElementById(key);
+      const { folder, count } = sections[key];
+
+      for (let i = 1; i <= count; i++) {
+        for (let ext of extensions) {
+          const img = new Image();
+          img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+          img.onload = () => {
+            container.appendChild(img);
+            img.onclick = () => openLightbox(img.src);
+          };
+          img.onerror = () => {};
+        }
       }
     }
 
