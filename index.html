@@ -203,11 +203,19 @@
   function openLightbox(src) {
     lightboxImg.src = src;
     lightbox.classList.add('show');
+    document.body.style.overflow = 'hidden'; // ✅ 打开时禁止页面滚动
   }
 
+  // ✅ 点击背景关闭
   lightbox.onclick = () => {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
+    document.body.style.overflow = ''; // ✅ 恢复滚动
+  };
+
+  // ✅ 阻止点击图片关闭
+  lightboxImg.onclick = (e) => {
+    e.stopPropagation();
   };
 </script>
 
