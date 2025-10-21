@@ -57,12 +57,16 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: zoom-in;
       opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: translateY(10px);
     }
     .gallery img.loaded {
       opacity: 1;
       transform: translateY(0);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .gallery img:hover {
+      transform: scale(1.02);
+      opacity: 0.9;
     }
 
     @media (max-width: 900px) {
@@ -111,7 +115,14 @@
     <p>Fragments of everyday life — moments, travels, and food that make up quiet days.</p>
   </header>
 
-  <div id="content"></div>
+  <div class="section-title">LIFE</div>
+  <div class="gallery" id="life"></div>
+
+  <div class="section-title">TRAVEL</div>
+  <div class="gallery" id="travel"></div>
+
+  <div class="section-title">FOOD</div>
+  <div class="gallery" id="food"></div>
 
   <div class="lightbox" id="lightbox">
     <img src="" alt="">
@@ -119,103 +130,71 @@
 
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
-<script>
-  // ===== 分区配置 =====
-  const sections = [
-    { title: 'LIFE', folder: 'photos/life/', count: 60 },
-    { title: 'TRAVEL', folder: 'photos/travel/', count: 50 },
-    { title: 'FOOD', folder: 'photos/food/', count: 10 }
-  ];
+  <script>
+    const sections = {
+      life: { folder: 'photos/life/', count: 60 },
+      travel: { folder: 'photos/travel/', count: 100 },
+      food: { folder: 'photos/food/', count: 20 }
+    };
 
-  const batchSize = 12; // 每次加载多少张
-  let currentSection = 0;   // 当前分区索引
-  let currentCount = 0;     // 当前分区已计划加载到的编号
-  let currentGallery = null; // 当前分区的容器
-  let isLoading = false;    // 防抖/并发锁
+    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox.querySelector('img');
 
-  const container = document.getElementById('content');
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = lightbox.querySelector('img');
+    // 每次加载8张
+    const batchSize = 8;
 
-  function createSection(title) {
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'section-title';
-    titleDiv.textContent = title;
-
-    const gallery = document.createElement('div');
-    gallery.className = 'gallery';
-
-    container.appendChild(titleDiv);
-    container.appendChild(gallery);
-    return gallery;
-  }
-
-  function loadMoreImages() {
-    if (isLoading) return;
-    const section = sections[currentSection];
-    if (!section) return;
-
-    isLoading = true;
-
-    // 若这是该分区第一次加载，创建分区容器
-    if (!currentGallery) {
-      currentGallery = createSection(section.title);
-    }
-
-    const { folder, count } = section;
-    const start = currentCount + 1;
-    const end = Math.min(currentCount + batchSize, count);
-
-    // 关键点：为这一批次“固定”目标容器，避免异步串位
-    const targetGallery = currentGallery;
-
-    for (let i = start; i <= end; i++) {
+    function createImage(src, container) {
       const img = new Image();
-      // 如需兼容多扩展名，可自行加一层尝试；这里先用 .jpg
-      img.src = `${folder}${String(i).padStart(2, '0')}.jpg`;
-
+      img.src = src;
       img.onload = () => {
         img.classList.add('loaded');
-        // 用“批次固定”的 targetGallery，而不是全局 currentGallery
-        targetGallery.appendChild(img);
+        container.appendChild(img);
         img.onclick = () => openLightbox(img.src);
       };
-
-      // 可选：失败时静默
-      img.onerror = () => {};
     }
 
-    currentCount = end;
-    isLoading = false;
+    // 分区独立加载器
+    function setupGallery(key, folder, count) {
+      const container = document.getElementById(key);
+      let index = 1;
 
-    // 若该分区已经全部排程完，切到下一个分区
-    if (currentCount >= count) {
-      currentSection += 1;
-      currentCount = 0;
-      currentGallery = null; // 下个分区会重新创建容器
+      function loadNextBatch() {
+        const end = Math.min(index + batchSize - 1, count);
+        for (let i = index; i <= end; i++) {
+          for (let ext of extensions) {
+            const src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+            createImage(src, container);
+          }
+        }
+        index = end + 1;
+      }
+
+      // 初始加载
+      loadNextBatch();
+
+      // 滚动加载
+      window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+          if (index <= count) loadNextBatch();
+        }
+      });
     }
-  }
 
-  // 滚动到底部时加载更多
-  window.addEventListener('scroll', () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-      loadMoreImages();
+    for (let key in sections) {
+      const { folder, count } = sections[key];
+      setupGallery(key, folder, count);
     }
-  }, { passive: true });
 
-  function openLightbox(src) {
-    lightboxImg.src = src;
-    lightbox.classList.add('show');
-  }
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('show');
+    }
 
-  lightbox.onclick = () => {
-    lightbox.classList.remove('show');
-    lightboxImg.src = '';
-  };
-
-  // 初始加载第一个分区的首批图片
-  loadMoreImages();
-</script>
-
+    lightbox.onclick = () => {
+      lightbox.classList.remove('show');
+      lightboxImg.src = '';
+    };
+  </script>
 </body>
 </html>
