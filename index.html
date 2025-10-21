@@ -142,7 +142,7 @@
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = lightbox.querySelector('img');
 
-    function loadImagesInBatches(container, folder, count, batchSize = 5, delay = 1200) {
+    function loadImagesInBatches(container, folder, count, batchSize = 5, delay = 1000) {
       let index = 1;
 
       function loadNextBatch() {
