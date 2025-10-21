@@ -97,44 +97,55 @@
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      z-index: 10;
     }
     .lightbox.show {
       visibility: visible;
       opacity: 1;
     }
 
+    /* ---- Buttons ---- */
     .close-btn,
     .prev-btn,
     .next-btn {
       position: absolute;
       color: white;
-      font-size: 2.5rem;
+      font-size: 2rem;
       cursor: pointer;
       user-select: none;
-      transition: opacity 0.3s ease;
+      z-index: 11;
+      transition: all 0.3s ease;
       font-weight: 300;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .close-btn:hover,
     .prev-btn:hover,
     .next-btn:hover {
-      opacity: 0.7;
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
     }
     .close-btn {
       top: 20px;
       right: 30px;
-      font-size: 2.2rem;
+      font-size: 1.8rem;
     }
     .prev-btn {
-      left: 30px;
+      left: 40px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 3rem;
+      font-size: 2rem;
     }
     .next-btn {
-      right: 30px;
+      right: 40px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 3rem;
+      font-size: 2rem;
     }
 
     footer {
@@ -143,6 +154,20 @@
       font-size: 0.9rem;
       padding: 50px 0;
       letter-spacing: 0.05em;
+    }
+
+    /* ---- Visitor Counter ---- */
+    #visit-counter {
+      position: fixed;
+      top: 20px;
+      right: 90px;
+      color: #eee;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.15);
+      padding: 6px 12px;
+      border-radius: 6px;
+      z-index: 20;
+      font-family: monospace;
     }
   </style>
 </head>
@@ -168,6 +193,8 @@
     <span class="next-btn">&#10095;</span>
   </div>
 
+  <div id="visit-counter">👁️ Views: <span id="count">--</span></div>
+
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
 <script>
@@ -185,7 +212,7 @@
   const nextBtn = document.querySelector('.next-btn');
 
   const batchSize = 8;
-  let allImages = []; // 存所有图片src
+  let allImages = [];
   let currentIndex = -1;
 
   function createImage(src, container) {
@@ -249,40 +276,42 @@
   }
 
   function showNext() {
-    if (currentIndex < allImages.length - 1) {
-      currentIndex++;
-    } else {
-      currentIndex = 0; // 循环播放
-    }
+    if (allImages.length === 0) return;
+    currentIndex = (currentIndex + 1) % allImages.length;
     lightboxImg.src = allImages[currentIndex].src;
   }
 
   function showPrev() {
-    if (currentIndex > 0) {
-      currentIndex--;
-    } else {
-      currentIndex = allImages.length - 1;
-    }
+    if (allImages.length === 0) return;
+    currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
     lightboxImg.src = allImages[currentIndex].src;
   }
 
-  // 按钮事件
   closeBtn.onclick = closeLightbox;
   nextBtn.onclick = showNext;
   prevBtn.onclick = showPrev;
 
-  // 背景点击关闭
   lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
+    if (e.target === lightbox || e.target === lightboxImg) closeLightbox();
   });
 
-  // 键盘事件
   document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('show')) return;
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowRight') showNext();
     if (e.key === 'ArrowLeft') showPrev();
   });
+
+  // ---- Visitor Counter ----
+  const counterKey = 'yama33-photojournal';
+  fetch(`https://api.countapi.xyz/hit/${counterKey}/visits`)
+    .then(res => res.json())
+    .then(res => {
+      document.getElementById('count').textContent = res.value;
+    })
+    .catch(() => {
+      document.getElementById('count').textContent = 'error';
+    });
 </script>
 
 </body>
