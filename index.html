@@ -130,71 +130,82 @@
 
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
-  <script>
-    const sections = {
-      life: { folder: 'photos/life/', count: 21 },
-      travel: { folder: 'photos/travel/', count: 50 },
-      food: { folder: 'photos/food/', count: 2 }
+<script>
+  const sections = {
+    life: { folder: 'photos/life/', count: 21 },
+    travel: { folder: 'photos/travel/', count: 50 },
+    food: { folder: 'photos/food/', count: 2 }
+  };
+
+  const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = lightbox.querySelector('img');
+
+  const batchSize = 8; // 每次加载8张
+
+  function createImage(src, container) {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      img.classList.add('loaded');
+      container.appendChild(img);
+      img.onclick = () => openLightbox(img.src);
     };
+  }
 
-    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = lightbox.querySelector('img');
+  function setupGallery(key, folder, count) {
+    const container = document.getElementById(key);
+    let index = 1;
 
-    // 每次加载8张
-    const batchSize = 8;
-
-    function createImage(src, container) {
-      const img = new Image();
-      img.src = src;
-      img.onload = () => {
-        img.classList.add('loaded');
-        container.appendChild(img);
-        img.onclick = () => openLightbox(img.src);
-      };
+    function loadNextBatch() {
+      const end = Math.min(index + batchSize - 1, count);
+      for (let i = index; i <= end; i++) {
+        for (let ext of extensions) {
+          const src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+          createImage(src, container);
+        }
+      }
+      index = end + 1;
+      if (index > count) observer.unobserve(trigger);
     }
 
-    // 分区独立加载器
-    function setupGallery(key, folder, count) {
-      const container = document.getElementById(key);
-      let index = 1;
+    // 初始加载
+    loadNextBatch();
 
-      function loadNextBatch() {
-        const end = Math.min(index + batchSize - 1, count);
-        for (let i = index; i <= end; i++) {
-          for (let ext of extensions) {
-            const src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
-            createImage(src, container);
-          }
-        }
-        index = end + 1;
-      }
+    // 创建触发器
+    const trigger = document.createElement('div');
+    trigger.className = 'load-trigger';
+    container.after(trigger);
 
-      // 初始加载
-      loadNextBatch();
-
-      // 滚动加载
-      window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-          if (index <= count) loadNextBatch();
+    // 使用 IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && index <= count) {
+          loadNextBatch();
         }
       });
-    }
+    }, {
+      rootMargin: '300px'
+    });
 
-    for (let key in sections) {
-      const { folder, count } = sections[key];
-      setupGallery(key, folder, count);
-    }
+    observer.observe(trigger);
+  }
 
-    function openLightbox(src) {
-      lightboxImg.src = src;
-      lightbox.classList.add('show');
-    }
+  for (let key in sections) {
+    const { folder, count } = sections[key];
+    setupGallery(key, folder, count);
+  }
 
-    lightbox.onclick = () => {
-      lightbox.classList.remove('show');
-      lightboxImg.src = '';
-    };
-  </script>
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.classList.add('show');
+  }
+
+  lightbox.onclick = () => {
+    lightbox.classList.remove('show');
+    lightboxImg.src = '';
+  };
+</script>
+
 </body>
 </html>
