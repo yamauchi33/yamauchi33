@@ -91,13 +91,13 @@
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease;
-      z-index: 10;
+      z-index: 1000;
     }
     .lightbox img {
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      z-index: 10;
+      z-index: 1001;
     }
     .lightbox.show {
       visibility: visible;
@@ -113,7 +113,7 @@
       font-size: 2rem;
       cursor: pointer;
       user-select: none;
-      z-index: 11;
+      z-index: 1002;
       transition: all 0.3s ease;
       font-weight: 300;
       background: rgba(255, 255, 255, 0.15);
@@ -166,7 +166,7 @@
       background: rgba(255,255,255,0.15);
       padding: 6px 12px;
       border-radius: 6px;
-      z-index: 20;
+      z-index: 2000;
       font-family: monospace;
     }
   </style>
@@ -198,6 +198,7 @@
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
   const sections = {
     life: { folder: 'photos/life/', count: 21 },
     travel: { folder: 'photos/travel/', count: 50 },
@@ -222,14 +223,13 @@
       img.classList.add('loaded');
       container.appendChild(img);
       allImages.push(img);
-      img.onclick = () => openLightbox(img);
+      img.addEventListener('click', () => openLightbox(img));
     };
   }
 
   function setupGallery(key, folder, count) {
     const container = document.getElementById(key);
     let index = 1;
-
     function loadNextBatch() {
       const end = Math.min(index + batchSize - 1, count);
       for (let i = index; i <= end; i++) {
@@ -241,21 +241,15 @@
       index = end + 1;
       if (index > count) observer.unobserve(trigger);
     }
-
     loadNextBatch();
-
     const trigger = document.createElement('div');
     trigger.className = 'load-trigger';
     container.after(trigger);
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && index <= count) {
-          loadNextBatch();
-        }
+        if (entry.isIntersecting && index <= count) loadNextBatch();
       });
     }, { rootMargin: '300px' });
-
     observer.observe(trigger);
   }
 
@@ -269,32 +263,28 @@
     lightboxImg.src = img.src;
     lightbox.classList.add('show');
   }
-
   function closeLightbox() {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
   }
-
   function showNext() {
     if (allImages.length === 0) return;
     currentIndex = (currentIndex + 1) % allImages.length;
     lightboxImg.src = allImages[currentIndex].src;
   }
-
   function showPrev() {
     if (allImages.length === 0) return;
     currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
     lightboxImg.src = allImages[currentIndex].src;
   }
 
-  closeBtn.onclick = closeLightbox;
-  nextBtn.onclick = showNext;
-  prevBtn.onclick = showPrev;
+  closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
+  nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
+  prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
 
   lightbox.addEventListener('click', (e) => {
     if (e.target === lightbox || e.target === lightboxImg) closeLightbox();
   });
-
   document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('show')) return;
     if (e.key === 'Escape') closeLightbox();
@@ -302,7 +292,7 @@
     if (e.key === 'ArrowLeft') showPrev();
   });
 
-  // ---- Visitor Counter ----
+  // visitor counter
   const counterKey = 'yama33-photojournal';
   fetch(`https://api.countapi.xyz/hit/${counterKey}/visits`)
     .then(res => res.json())
@@ -312,7 +302,7 @@
     .catch(() => {
       document.getElementById('count').textContent = 'error';
     });
+});
 </script>
-
 </body>
 </html>
