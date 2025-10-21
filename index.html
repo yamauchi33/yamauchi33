@@ -91,7 +91,8 @@
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease;
-      z-index: 10;
+      z-index: 99999;
+      pointer-events: auto; /* 确保可以接收点击 */     
     }
     .lightbox img {
       max-width: 90%;
@@ -136,9 +137,9 @@
 
 <script>
   const sections = {
-    life: { folder: 'photos/life/', count: 50 },
-    travel: { folder: 'photos/travel/', count: 60 },
-    food: { folder: 'photos/food/', count: 10 }
+    life: { folder: 'photos/life/', count: 21 },
+    travel: { folder: 'photos/travel/', count: 50 },
+    food: { folder: 'photos/food/', count: 2 }
   };
 
   const extensions = ['jpg', 'jpeg', 'png', 'webp'];
@@ -146,6 +147,7 @@
   const lightboxImg = lightbox.querySelector('img');
   const batchSize = 8;
 
+  // 创建图片
   function createImage(src, container) {
     const img = new Image();
     img.src = src;
@@ -153,12 +155,12 @@
       img.classList.add('loaded');
       container.appendChild(img);
       img.addEventListener('click', (e) => {
-        e.stopPropagation();
         openLightbox(img.src);
       });
     };
   }
 
+  // 分区加载
   function setupGallery(key, folder, count) {
     const container = document.getElementById(key);
     let index = 1;
@@ -183,13 +185,9 @@
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && index <= count) {
-          loadNextBatch();
-        }
+        if (entry.isIntersecting && index <= count) loadNextBatch();
       });
-    }, {
-      rootMargin: '300px'
-    });
+    }, { rootMargin: '300px' });
 
     observer.observe(trigger);
   }
@@ -199,6 +197,7 @@
     setupGallery(key, folder, count);
   }
 
+  // 打开/关闭函数
   function openLightbox(src) {
     lightboxImg.src = src;
     lightbox.classList.add('show');
@@ -211,16 +210,17 @@
     document.body.style.overflow = '';
   }
 
-  // ✅ 点击整个 lightbox（含图片）关闭
+  // ✅ 点击 anywhere（包括图片）都能关闭
   lightbox.addEventListener('click', closeLightbox);
+  lightboxImg.addEventListener('click', closeLightbox);
 
-  // ✅ 按 ESC 键关闭
+  // ✅ 键盘 ESC 关闭
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
   });
+
+  // ✅ 调试辅助（你可以临时观察是否触发）
+  // lightbox.addEventListener('click', () => console.log('Lightbox clicked'));
 </script>
-
-
-
 </body>
 </html>
