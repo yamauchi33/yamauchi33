@@ -92,7 +92,6 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       z-index: 99999;
-      pointer-events: auto; /* 确保可以接收点击 */     
     }
     .lightbox img {
       max-width: 90%;
@@ -154,7 +153,7 @@
     img.onload = () => {
       img.classList.add('loaded');
       container.appendChild(img);
-      img.addEventListener('click', (e) => {
+      img.addEventListener('click', () => {
         openLightbox(img.src);
       });
     };
@@ -210,17 +209,17 @@
     document.body.style.overflow = '';
   }
 
-  // ✅ 点击 anywhere（包括图片）都能关闭
+  // ✅ 点击任意位置（包括图片）都能关闭
   lightbox.addEventListener('click', closeLightbox);
-  lightboxImg.addEventListener('click', closeLightbox);
+  lightboxImg.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
 
-  // ✅ 键盘 ESC 关闭
+  // ✅ ESC 关闭
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
   });
-
-  // ✅ 调试辅助（你可以临时观察是否触发）
-  // lightbox.addEventListener('click', () => console.log('Lightbox clicked'));
 </script>
 </body>
 </html>
