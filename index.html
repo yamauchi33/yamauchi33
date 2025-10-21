@@ -46,9 +46,9 @@
     }
 
     .gallery {
-      column-count: 3;
+      column-count: 4;
       column-gap: 12px;
-      padding: 0 10%;
+      padding: 0 5%;
     }
     .gallery img {
       width: 100%;
@@ -67,6 +67,10 @@
     .gallery img:hover {
       transform: scale(1.02);
       opacity: 0.9;
+    }
+
+    @media (max-width: 1200px) {
+      .gallery { column-count: 3; padding: 0 6%; }
     }
 
     @media (max-width: 900px) {
