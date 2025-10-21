@@ -55,6 +55,7 @@
       margin-bottom: 12px;
       border-radius: 6px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.25s ease, opacity 0.25s ease;
       cursor: zoom-in;
       opacity: 0;
       transform: translateY(10px);
@@ -62,7 +63,7 @@
     .gallery img.loaded {
       opacity: 1;
       transform: translateY(0);
-      transition: opacity 1s ease, transform 1s ease;
+      transition: opacity 1.2s ease, transform 1.2s ease;
     }
     .gallery img:hover {
       transform: scale(1.02);
@@ -132,58 +133,44 @@
 
   <script>
     const sections = {
-      life: { folder: 'photos/life/', count: 60 },
-      travel: { folder: 'photos/travel/', count: 100 },
-      food: { folder: 'photos/food/', count: 20 }
+      life: { folder: 'photos/life/', count: 21 },
+      travel: { folder: 'photos/travel/', count: 50 },
+      food: { folder: 'photos/food/', count: 2 }
     };
 
     const extensions = ['jpg', 'jpeg', 'png', 'webp'];
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = lightbox.querySelector('img');
 
-    // 每次加载9张
-    const batchSize = 9;
-
-    function createImage(src, container) {
-      const img = new Image();
-      img.src = src;
-      img.onload = () => {
-        img.classList.add('loaded');
-        container.appendChild(img);
-        img.onclick = () => openLightbox(img.src);
-      };
-    }
-
-    // 分区独立加载器
-    function setupGallery(key, folder, count) {
-      const container = document.getElementById(key);
+    function loadImagesInBatches(container, folder, count, batchSize = 5, delay = 1200) {
       let index = 1;
 
       function loadNextBatch() {
         const end = Math.min(index + batchSize - 1, count);
         for (let i = index; i <= end; i++) {
           for (let ext of extensions) {
-            const src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
-            createImage(src, container);
+            const img = new Image();
+            img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+            img.onload = () => {
+              img.classList.add('loaded');
+              container.appendChild(img);
+              img.onclick = () => openLightbox(img.src);
+            };
+            img.onerror = () => {};
           }
         }
         index = end + 1;
-      }
-
-      // 初始加载
-      loadNextBatch();
-
-      // 滚动加载
-      window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-          if (index <= count) loadNextBatch();
+        if (index <= count) {
+          setTimeout(loadNextBatch, delay);
         }
-      });
+      }
+      loadNextBatch();
     }
 
     for (let key in sections) {
+      const container = document.getElementById(key);
       const { folder, count } = sections[key];
-      setupGallery(key, folder, count);
+      loadImagesInBatches(container, folder, count);
     }
 
     function openLightbox(src) {
