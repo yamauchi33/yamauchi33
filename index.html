@@ -144,8 +144,8 @@
   const extensions = ['jpg', 'jpeg', 'png', 'webp'];
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('img');
-
-  const batchSize = 8; // 每次加载8张
+  const batchSize = 8;
+  let lightboxOpen = false;
 
   function createImage(src, container) {
     const img = new Image();
@@ -153,7 +153,10 @@
     img.onload = () => {
       img.classList.add('loaded');
       container.appendChild(img);
-      img.onclick = () => openLightbox(img.src);
+      img.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止立即关闭
+        openLightbox(img.src);
+      });
     };
   }
 
@@ -173,24 +176,17 @@
       if (index > count) observer.unobserve(trigger);
     }
 
-    // 初始加载
     loadNextBatch();
 
-    // 创建触发器
     const trigger = document.createElement('div');
     trigger.className = 'load-trigger';
     container.after(trigger);
 
-    // 使用 IntersectionObserver
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && index <= count) {
-          loadNextBatch();
-        }
+        if (entry.isIntersecting && index <= count) loadNextBatch();
       });
-    }, {
-      rootMargin: '300px'
-    });
+    }, { rootMargin: '300px' });
 
     observer.observe(trigger);
   }
@@ -203,21 +199,28 @@
   function openLightbox(src) {
     lightboxImg.src = src;
     lightbox.classList.add('show');
-    document.body.style.overflow = 'hidden'; // ✅ 打开时禁止页面滚动
+    document.body.style.overflow = 'hidden';
+    lightboxOpen = true;
   }
 
-  // ✅ 点击背景关闭
-  lightbox.onclick = () => {
+  function closeLightbox() {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
-    document.body.style.overflow = ''; // ✅ 恢复滚动
-  };
+    document.body.style.overflow = '';
+    lightboxOpen = false;
+  }
 
-  // ✅ 阻止点击图片关闭
-  lightboxImg.onclick = (e) => {
-    e.stopPropagation();
-  };
+  // ✅ 任意点击都关闭
+  document.addEventListener('click', () => {
+    if (lightboxOpen) closeLightbox();
+  });
+
+  // ✅ 按 ESC 键关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightboxOpen) closeLightbox();
+  });
 </script>
+
 
 </body>
 </html>
