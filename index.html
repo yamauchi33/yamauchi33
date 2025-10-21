@@ -72,7 +72,6 @@
     @media (max-width: 1200px) {
       .gallery { column-count: 3; padding: 0 5%; }
     }
-
     @media (max-width: 900px) {
       .gallery { column-count: 2; padding: 0 5%; }
     }
@@ -80,6 +79,7 @@
       .gallery { column-count: 1; padding: 0 5%; }
     }
 
+    /* ---- Lightbox ---- */
     .lightbox {
       position: fixed;
       top: 0; left: 0;
@@ -97,11 +97,44 @@
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      cursor: zoom-out;
     }
     .lightbox.show {
       visibility: visible;
       opacity: 1;
+    }
+
+    .close-btn,
+    .prev-btn,
+    .next-btn {
+      position: absolute;
+      color: white;
+      font-size: 2.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.3s ease;
+      font-weight: 300;
+    }
+    .close-btn:hover,
+    .prev-btn:hover,
+    .next-btn:hover {
+      opacity: 0.7;
+    }
+    .close-btn {
+      top: 20px;
+      right: 30px;
+      font-size: 2.2rem;
+    }
+    .prev-btn {
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+    }
+    .next-btn {
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
     }
 
     footer {
@@ -129,7 +162,10 @@
   <div class="gallery" id="food"></div>
 
   <div class="lightbox" id="lightbox">
+    <span class="close-btn">&times;</span>
+    <span class="prev-btn">&#10094;</span>
     <img src="" alt="">
+    <span class="next-btn">&#10095;</span>
   </div>
 
   <footer>© 2025 YAMA33. All rights reserved.</footer>
@@ -144,8 +180,13 @@
   const extensions = ['jpg', 'jpeg', 'png', 'webp'];
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('img');
+  const closeBtn = document.querySelector('.close-btn');
+  const prevBtn = document.querySelector('.prev-btn');
+  const nextBtn = document.querySelector('.next-btn');
 
-  const batchSize = 8; // 每次加载8张
+  const batchSize = 8;
+  let allImages = []; // 存所有图片src
+  let currentIndex = -1;
 
   function createImage(src, container) {
     const img = new Image();
@@ -153,7 +194,8 @@
     img.onload = () => {
       img.classList.add('loaded');
       container.appendChild(img);
-      img.onclick = () => openLightbox(img.src);
+      allImages.push(img);
+      img.onclick = () => openLightbox(img);
     };
   }
 
@@ -173,24 +215,19 @@
       if (index > count) observer.unobserve(trigger);
     }
 
-    // 初始加载
     loadNextBatch();
 
-    // 创建触发器
     const trigger = document.createElement('div');
     trigger.className = 'load-trigger';
     container.after(trigger);
 
-    // 使用 IntersectionObserver
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && index <= count) {
           loadNextBatch();
         }
       });
-    }, {
-      rootMargin: '300px'
-    });
+    }, { rootMargin: '300px' });
 
     observer.observe(trigger);
   }
@@ -200,15 +237,52 @@
     setupGallery(key, folder, count);
   }
 
-  function openLightbox(src) {
-    lightboxImg.src = src;
+  function openLightbox(img) {
+    currentIndex = allImages.indexOf(img);
+    lightboxImg.src = img.src;
     lightbox.classList.add('show');
   }
 
-  lightbox.onclick = () => {
+  function closeLightbox() {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
-  };
+  }
+
+  function showNext() {
+    if (currentIndex < allImages.length - 1) {
+      currentIndex++;
+    } else {
+      currentIndex = 0; // 循环播放
+    }
+    lightboxImg.src = allImages[currentIndex].src;
+  }
+
+  function showPrev() {
+    if (currentIndex > 0) {
+      currentIndex--;
+    } else {
+      currentIndex = allImages.length - 1;
+    }
+    lightboxImg.src = allImages[currentIndex].src;
+  }
+
+  // 按钮事件
+  closeBtn.onclick = closeLightbox;
+  nextBtn.onclick = showNext;
+  prevBtn.onclick = showPrev;
+
+  // 背景点击关闭
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  // 键盘事件
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('show')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') showNext();
+    if (e.key === 'ArrowLeft') showPrev();
+  });
 </script>
 
 </body>
