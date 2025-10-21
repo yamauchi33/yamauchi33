@@ -72,6 +72,7 @@
     @media (max-width: 1200px) {
       .gallery { column-count: 3; padding: 0 5%; }
     }
+
     @media (max-width: 900px) {
       .gallery { column-count: 2; padding: 0 5%; }
     }
@@ -79,7 +80,6 @@
       .gallery { column-count: 1; padding: 0 5%; }
     }
 
-    /* ---- Lightbox ---- */
     .lightbox {
       position: fixed;
       top: 0; left: 0;
@@ -91,61 +91,17 @@
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease;
-      z-index: 1000;
+      z-index: 10;
     }
     .lightbox img {
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      z-index: 1001;
+      cursor: zoom-out;
     }
     .lightbox.show {
       visibility: visible;
       opacity: 1;
-    }
-
-    /* ---- Buttons ---- */
-    .close-btn,
-    .prev-btn,
-    .next-btn {
-      position: absolute;
-      color: white;
-      font-size: 2rem;
-      cursor: pointer;
-      user-select: none;
-      z-index: 1002;
-      transition: all 0.3s ease;
-      font-weight: 300;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .close-btn:hover,
-    .prev-btn:hover,
-    .next-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
-    }
-    .close-btn {
-      top: 20px;
-      right: 30px;
-      font-size: 1.8rem;
-    }
-    .prev-btn {
-      left: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 2rem;
-    }
-    .next-btn {
-      right: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 2rem;
     }
 
     footer {
@@ -154,20 +110,6 @@
       font-size: 0.9rem;
       padding: 50px 0;
       letter-spacing: 0.05em;
-    }
-
-    /* ---- Visitor Counter ---- */
-    #visit-counter {
-      position: fixed;
-      top: 20px;
-      right: 90px;
-      color: #eee;
-      font-size: 0.9rem;
-      background: rgba(255,255,255,0.15);
-      padding: 6px 12px;
-      border-radius: 6px;
-      z-index: 2000;
-      font-family: monospace;
     }
   </style>
 </head>
@@ -187,18 +129,12 @@
   <div class="gallery" id="food"></div>
 
   <div class="lightbox" id="lightbox">
-    <span class="close-btn">&times;</span>
-    <span class="prev-btn">&#10094;</span>
     <img src="" alt="">
-    <span class="next-btn">&#10095;</span>
   </div>
-
-  <div id="visit-counter">👁️ Views: <span id="count">--</span></div>
 
   <footer>© 2025 YAMA33. All rights reserved.</footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
   const sections = {
     life: { folder: 'photos/life/', count: 21 },
     travel: { folder: 'photos/travel/', count: 50 },
@@ -208,13 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const extensions = ['jpg', 'jpeg', 'png', 'webp'];
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('img');
-  const closeBtn = document.querySelector('.close-btn');
-  const prevBtn = document.querySelector('.prev-btn');
-  const nextBtn = document.querySelector('.next-btn');
 
-  const batchSize = 8;
-  let allImages = [];
-  let currentIndex = -1;
+  const batchSize = 8; // 每次加载8张
 
   function createImage(src, container) {
     const img = new Image();
@@ -222,14 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
     img.onload = () => {
       img.classList.add('loaded');
       container.appendChild(img);
-      allImages.push(img);
-      img.addEventListener('click', () => openLightbox(img));
+      img.onclick = () => openLightbox(img.src);
     };
   }
 
   function setupGallery(key, folder, count) {
     const container = document.getElementById(key);
     let index = 1;
+
     function loadNextBatch() {
       const end = Math.min(index + batchSize - 1, count);
       for (let i = index; i <= end; i++) {
@@ -241,15 +172,26 @@ document.addEventListener('DOMContentLoaded', () => {
       index = end + 1;
       if (index > count) observer.unobserve(trigger);
     }
+
+    // 初始加载
     loadNextBatch();
+
+    // 创建触发器
     const trigger = document.createElement('div');
     trigger.className = 'load-trigger';
     container.after(trigger);
+
+    // 使用 IntersectionObserver
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && index <= count) loadNextBatch();
+        if (entry.isIntersecting && index <= count) {
+          loadNextBatch();
+        }
       });
-    }, { rootMargin: '300px' });
+    }, {
+      rootMargin: '300px'
+    });
+
     observer.observe(trigger);
   }
 
@@ -258,51 +200,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setupGallery(key, folder, count);
   }
 
-  function openLightbox(img) {
-    currentIndex = allImages.indexOf(img);
-    lightboxImg.src = img.src;
+  function openLightbox(src) {
+    lightboxImg.src = src;
     lightbox.classList.add('show');
   }
-  function closeLightbox() {
+
+  lightbox.onclick = () => {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
-  }
-  function showNext() {
-    if (allImages.length === 0) return;
-    currentIndex = (currentIndex + 1) % allImages.length;
-    lightboxImg.src = allImages[currentIndex].src;
-  }
-  function showPrev() {
-    if (allImages.length === 0) return;
-    currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
-    lightboxImg.src = allImages[currentIndex].src;
-  }
-
-  closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
-  nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
-  prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
-
-  lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox || e.target === lightboxImg) closeLightbox();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (!lightbox.classList.contains('show')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowRight') showNext();
-    if (e.key === 'ArrowLeft') showPrev();
-  });
-
-  // visitor counter
-  const counterKey = 'yama33-photojournal';
-  fetch(`https://api.countapi.xyz/hit/${counterKey}/visits`)
-    .then(res => res.json())
-    .then(res => {
-      document.getElementById('count').textContent = res.value;
-    })
-    .catch(() => {
-      document.getElementById('count').textContent = 'error';
-    });
-});
+  };
 </script>
+
 </body>
 </html>
