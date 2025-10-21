@@ -29,7 +29,6 @@
       line-height: 1.6;
     }
 
-    /* 区块标题 */
     .section-title {
       text-align: center;
       font-size: 1.3rem;
@@ -37,7 +36,6 @@
       margin: 60px 0 20px;
       position: relative;
     }
-
     .section-title::after {
       content: "";
       display: block;
@@ -47,7 +45,6 @@
       margin: 10px auto 0;
     }
 
-    /* 图片展示 */
     .gallery {
       column-count: 3;
       column-gap: 12px;
@@ -60,11 +57,19 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: transform 0.25s ease, opacity 0.25s ease;
       cursor: zoom-in;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    .gallery img.loaded {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 1.2s ease, transform 1.2s ease;
     }
     .gallery img:hover {
       transform: scale(1.02);
       opacity: 0.9;
     }
+
     @media (max-width: 900px) {
       .gallery { column-count: 2; padding: 0 5%; }
     }
@@ -72,7 +77,6 @@
       .gallery { column-count: 1; padding: 0 5%; }
     }
 
-    /* 放大预览 */
     .lightbox {
       position: fixed;
       top: 0; left: 0;
@@ -112,19 +116,15 @@
     <p>Fragments of everyday life — moments, travels, and food that make up quiet days.</p>
   </header>
 
-  <!-- ====== 生活 Life ====== -->
   <div class="section-title">LIFE</div>
   <div class="gallery" id="life"></div>
 
-  <!-- ====== 旅行 Travel ====== -->
   <div class="section-title">TRAVEL</div>
   <div class="gallery" id="travel"></div>
 
-  <!-- ====== 美食 Food ====== -->
   <div class="section-title">FOOD</div>
   <div class="gallery" id="food"></div>
 
-  <!-- ====== 预览层 ====== -->
   <div class="lightbox" id="lightbox">
     <img src="" alt="">
   </div>
@@ -133,31 +133,44 @@
 
   <script>
     const sections = {
-      life: { folder: 'photos/life/', count: 18 },
-      travel: { folder: 'photos/travel/', count: 50 },
-      food: { folder: 'photos/food/', count: 2 }
+      life: { folder: 'photos/life/', count: 100 },
+      travel: { folder: 'photos/travel/', count: 100 },
+      food: { folder: 'photos/food/', count: 100 }
     };
 
     const extensions = ['jpg', 'jpeg', 'png', 'webp'];
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = lightbox.querySelector('img');
 
-    // 循环加载各区照片
+    function loadImagesInBatches(container, folder, count, batchSize = 5, delay = 1200) {
+      let index = 1;
+
+      function loadNextBatch() {
+        const end = Math.min(index + batchSize - 1, count);
+        for (let i = index; i <= end; i++) {
+          for (let ext of extensions) {
+            const img = new Image();
+            img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
+            img.onload = () => {
+              img.classList.add('loaded');
+              container.appendChild(img);
+              img.onclick = () => openLightbox(img.src);
+            };
+            img.onerror = () => {};
+          }
+        }
+        index = end + 1;
+        if (index <= count) {
+          setTimeout(loadNextBatch, delay);
+        }
+      }
+      loadNextBatch();
+    }
+
     for (let key in sections) {
       const container = document.getElementById(key);
       const { folder, count } = sections[key];
-
-      for (let i = 1; i <= count; i++) {
-        for (let ext of extensions) {
-          const img = new Image();
-          img.src = `${folder}${String(i).padStart(2, '0')}.${ext}`;
-          img.onload = () => {
-            container.appendChild(img);
-            img.onclick = () => openLightbox(img.src);
-          };
-          img.onerror = () => {};
-        }
-      }
+      loadImagesInBatches(container, folder, count);
     }
 
     function openLightbox(src) {
