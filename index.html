@@ -137,15 +137,14 @@
 <script>
   const sections = {
     life: { folder: 'photos/life/', count: 50 },
-    travel: { folder: 'photos/travel/', count: 50 },
-    food: { folder: 'photos/food/', count: 3 }
+    travel: { folder: 'photos/travel/', count: 60 },
+    food: { folder: 'photos/food/', count: 10 }
   };
 
   const extensions = ['jpg', 'jpeg', 'png', 'webp'];
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('img');
   const batchSize = 8;
-  let lightboxOpen = false;
 
   function createImage(src, container) {
     const img = new Image();
@@ -154,7 +153,7 @@
       img.classList.add('loaded');
       container.appendChild(img);
       img.addEventListener('click', (e) => {
-        e.stopPropagation(); // 防止立即关闭
+        e.stopPropagation();
         openLightbox(img.src);
       });
     };
@@ -184,9 +183,13 @@
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && index <= count) loadNextBatch();
+        if (entry.isIntersecting && index <= count) {
+          loadNextBatch();
+        }
       });
-    }, { rootMargin: '300px' });
+    }, {
+      rootMargin: '300px'
+    });
 
     observer.observe(trigger);
   }
@@ -200,26 +203,23 @@
     lightboxImg.src = src;
     lightbox.classList.add('show');
     document.body.style.overflow = 'hidden';
-    lightboxOpen = true;
   }
 
   function closeLightbox() {
     lightbox.classList.remove('show');
     lightboxImg.src = '';
     document.body.style.overflow = '';
-    lightboxOpen = false;
   }
 
-  // ✅ 任意点击都关闭
-  document.addEventListener('click', () => {
-    if (lightboxOpen) closeLightbox();
-  });
+  // ✅ 点击整个 lightbox（含图片）关闭
+  lightbox.addEventListener('click', closeLightbox);
 
   // ✅ 按 ESC 键关闭
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightboxOpen) closeLightbox();
+    if (e.key === 'Escape') closeLightbox();
   });
 </script>
+
 
 
 </body>
